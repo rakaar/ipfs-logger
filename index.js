@@ -1,7 +1,9 @@
 const express = require('express')
 const IPFS = require('ipfs')
+const bodyParser = require('body-parser');
 
 const app = express()
+app.use(bodyParser.urlencoded({ extended: true }));
 const port = 3000
 
 const sqlite3 = require('sqlite3').verbose();
@@ -32,26 +34,31 @@ app.get('/', (req, res) => res.send('Alive !'))
 
 //POST endpoint to add data to the IPFS
 app.post('/write', async (req, res) => {
-   const data = JSON.stringify(res.body)
+   console.log("req.body is ",req.body)
+   const data = JSON.stringify(req.body)
 
    const node = await IPFS.create()
+   console.log("data is ", data)
    const  results =  node.add(data)
 
    results
       .then(res => {
-        const sql_insert = `INSERT INTO Hashes (Hash) VALUES ${(res.path)};`;
+         console.log("res.path is ",res.path)
+        const sql_insert = `INSERT INTO Hashes (Hash) VALUES (${res.path});`;
         db.run(sql_insert, err => {
          if (err) {
-            return console.error(err.message);
+             console.log("err in db",err);
           }
 
           console.log("Successful creation of Hashes");
           res.send("success")
 
         })
+      console.log("sql insert is ",sql_insert)
 
       })
       .catch(err => {
+         console.log("Err is ",err)
          res.send(err);
          return
       })
